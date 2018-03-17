@@ -1,0 +1,30 @@
+include library.options
+
+SUBDIRS    = $(patsubst %/., %, $(wildcard */.))
+TARGET_DIR = lib
+INC_DIR    = include
+
+
+OBJ = $(wildcard */obj/*.o)
+
+.PHONY: all $(SUBDIRS) clean dist retract
+
+all: dist
+
+$(SUBDIRS):
+	$(MAKE) -C $@
+
+$(TARGET): $(OBJ)
+	ar cr $(DEST)/$(TARGET_DIR)/$(TARGET) $^
+
+
+clean:
+	$(RM) $(DEST)/$(TARGET_DIR)/$(TARGET)
+	for i in $(SUBDIRS); do $(MAKE) -C $$i clean; done
+
+dist: $(SUBDIRS) $(TARGET)
+	for i in $(SUBDIRS); do cp "$$i"/*.h $(DEST)/$(INC_DIR); done
+
+retract:
+	$(RM) $(DEST)/$(TARGET_DIR)/$(TARGET)
+	for diri in $(SUBDIRS); do for i in $$dir/*.h; do $(RM) $(DEST)/$(INC_DIR)/$$(basename "$$i"); done; done
