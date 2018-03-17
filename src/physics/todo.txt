@@ -1,0 +1,2 @@
+Caracterizar a través de una o varias clases los
+atributos del sólido rígido.
