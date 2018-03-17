@@ -3,7 +3,7 @@ EXE = viewer
 SRC_DIR = src
 OBJ_DIR = obj
 LIB_DIR = lib
-INCLUDE = ./inc
+INCLUDE = ./include
 DIST = ./bin
 
 SRC = $(wildcard $(SRC_DIR)/*.cpp)
