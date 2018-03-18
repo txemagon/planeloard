@@ -1,0 +1,5 @@
+NAME    = math3D
+VERSION = 1.0.0
+
+ROOT    = ../..
+

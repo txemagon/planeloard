@@ -1,0 +1,7 @@
+ I need you to please copy map3.{h,cpp} in this folder.
+ I rather you copy it from https://github.com/BennyQBD/3DEngineCpp/blob/master/src/core/math3d.h better
+ than just copy-paste it.
+
+ Ask every question while copying.
+
+
