@@ -1,30 +1,43 @@
-include library.options
-
 SUBDIRS    = $(patsubst %/., %, $(wildcard */.))
-TARGET_DIR = lib
 INC_DIR    = include
 
+# Override in options file
+NAME       = demo
+VERSION    = 1.0.0
+ROOT_DIR   = ../..
+
+include *.options
+
+TARGET     = lib$(NAME).a
+LIB_DEST = $(ROOT_DIR)/$(TARGET_DIR)
+INC_DEST = $(ROOT_DIR)/$(INC_DIR)/$(NAME)
 
 OBJ = $(wildcard */obj/*.o)
 
-.PHONY: all $(SUBDIRS) clean dist retract
+.PHONY: all $(SUBDIRS) clean dist retract prepare
 
-all: dist
+all: prepare dist
 
 $(SUBDIRS):
 	$(MAKE) -C $@
 
 $(TARGET): $(OBJ)
-	ar cr $(DEST)/$(TARGET_DIR)/$(TARGET) $^
+	ar cr $(LIB_DEST)/$(TARGET) $^
 
+
+prepare:
+	[[ -d  $(LIB_DEST) ]] || mkdir -p $(LIB_DEST)
+	[[ -d  $(INC_DEST) ]] || mkdir -p $(INC_DEST)
 
 clean:
-	$(RM) $(DEST)/$(TARGET_DIR)/$(TARGET)
+	$(RM) $(LIB_DEST)/$(TARGET)
 	for i in $(SUBDIRS); do $(MAKE) -C $$i clean; done
 
 dist: $(SUBDIRS) $(TARGET)
-	for i in $(SUBDIRS); do cp "$$i"/*.h $(DEST)/$(INC_DIR); done
+	for i in $(SUBDIRS); do cp "$$i"/*.h $(INC_DEST); done
 
 retract:
 	$(RM) $(DEST)/$(TARGET_DIR)/$(TARGET)
-	for diri in $(SUBDIRS); do for i in $$dir/*.h; do $(RM) $(DEST)/$(INC_DIR)/$$(basename "$$i"); done; done
+	for dir in $(SUBDIRS); do for i in $$dir/*.h; do \
+            $(RM) $(INC_DEST)/$$(basename "$$i"); \
+        done; done

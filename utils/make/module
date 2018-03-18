@@ -6,7 +6,8 @@ OBJ = $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 CPPFLAGS += -I.
 CFLAGS += -Wall
-include module.options
+
+include *.options
 
 CC = g++
 
