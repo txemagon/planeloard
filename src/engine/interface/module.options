@@ -1,0 +1,2 @@
+LDFLAGS += -L$(LIB_DIR)
+LDLIBS += -lGL -lGLEW -lSDL2

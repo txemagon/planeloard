@@ -1,0 +1,25 @@
+SRC_DIR = .
+OBJ_DIR = obj
+
+SRC = $(wildcard $(SRC_DIR)/*.cpp)
+OBJ = $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+
+CPPFLAGS += -I.
+CFLAGS += -Wall
+include module.options
+
+CC = g++
+
+all: prepare $(OBJ)
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+.PHONY: all prepare clean
+
+prepare:
+	[ -d $(OBJ_DIR) ] || mkdir $(OBJ_DIR)
+
+clean:
+	$(RM) $(OBJ_DIR)/*
+
