@@ -1,4 +1,4 @@
-NAME    = math3D
+NAME    = profiler
 VERSION = 1.0.0
 
 ROOT    = ../..
