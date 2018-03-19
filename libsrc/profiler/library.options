@@ -1,5 +1,3 @@
 NAME    = profiler
 VERSION = 1.0.0
 
-ROOT    = ../..
-

@@ -4,8 +4,9 @@
 #define ROOTLIB_DIR ../../
 #define CONC(x,y) ROOTLIB_DIR ## y
 #define LIB(x) # CONC(x)
-#include LIB(math3d/math3d.h)
-#include LIB(profiler/reference_counter.h)
+
+#include "math3d/math3d.h"
+#include "profiler/reference_counter.h"
 
 #include <string>
 #include <vector>

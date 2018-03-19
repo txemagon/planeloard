@@ -3,11 +3,11 @@ INC_DIR    = include
 
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(notdir $(patsubst %/,%,$(dir $(MKFILE_PATH))))
+ROOT_DIR   = $(realpath $(MKFILE_PATH))/../../..
 
 # Override in options file
 NAME       = demo
 VERSION    = 1.0.0
-ROOT_DIR   = $(realpath $(MKFILE_PATH))/../../..
 
 include *.options
 
