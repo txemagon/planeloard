@@ -129,3 +129,162 @@ void IndexedModel::calc_tangents()
         m_tangents[i] = m_tangents[i].normalized();
 
 }
+
+MeshData::MeshData(const IndexedModel &model) :
+    ReferenceCounter(),
+    m_draw_count(model.get_indices().get_size())
+{
+    if ( !model.is_valid( ))
+    {
+        std::cout << "Error: Invalid mesh! Must have same number of positions, "
+            "tex_coords, normals, and tangents! "
+            << "(Maybe you forgot to finalize() your IndexedModel?)" << std::endl;
+        assert( 0 != 0 );
+    }
+
+    glGenVertexArrays( 1, &m_vertex_array_object );
+    glBindVertexArray( m_vertex_array_object );
+
+    glGenBuffers( NUM_BUFFERS, m_vertex_array_objects);
+
+    glBindBuffer( GL_ARRAY_BUFFER, m_vertex_array_buffers[POSITION_VB] );
+    glBufferData( GL_ARRAY_BUFFER, model.get_positions().size() * sizeof(model.get_positions()[0]), &model.get_positions[0] );
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glBindBuffer( GL_ARRAY_BUFFER, m_vertex_array_buffers[TEXCOORD_VB] );
+    glBufferData( GL_ARRAY_BUFFER, model.get_tex_coords().size() * sizeof(model.get_tex_coords()[0]), &model.get_tex_coords[0] );
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glBindBuffer( GL_ARRAY_BUFFER, m_vertex_array_buffers[NORMAL_VB] );
+    glBufferData( GL_ARRAY_BUFFER, model.get_normals().size() * sizeof(model.get_normals()[0]), &model.get_normals[0] );
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glBindBuffer( GL_ARRAY_BUFFER, m_vertex_array_buffers[TANGENT_VB] );
+    glBufferData( GL_ARRAY_BUFFER, model.get_tangents().size() * sizeof(model.get_tangents()[0]), &model.get_tangents[0] );
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_vertex_array_buffers[INDEX_VB] );
+    glBufferData( GL_ELEMENT_ARRAY_BUFFER, model.get_indices().size() * sizeof(model.get_indices()[0]), &model.get_indices[0] );
+
+}
+
+MeshData::~MeshData()
+{
+    glDeleteBuffers(NUM_BUFFERS, m_vertex_array_buffers);
+    glDeleteVertexArrays(1, &m_vertex_array_objects);
+}
+
+void MesData::draw() const
+{
+    glBindVertexArray(m_vertex_array_object);
+
+#if PROFILING_DISABLE_MESH_DRAWING == 0
+    glDrawElements(GL_TRIANGLES, m_draw_count, GL_UNSIGNED_INT, 0);
+#endif
+}
+
+Mesh::Mesh(const std::string &mesh_name, const IndexedModel &model) :
+    m_filename(mesh_name)
+{
+    std::map<std::string, MeshData *>::const Iterator it = s_resource_map.find(filename);
+    if (it != s_resourceMap.end())
+    {
+        std::cout << "Error adding mesh " << mesh_name << ": Mesh already exists by the same name!" << std::endl;
+        assert( 0 != 0 );
+    }
+    else
+    {
+        m_mesh_data = new MeshData(model);
+        s_resource_map.insert(std::pair<std::string, MeshData *>(mesh_name, mesh_data));
+    }
+
+}
+
+Mesh::Mesh(const std::string &mesh_name) :
+    m_filename(mesh_name),
+    m_mesh_data(0)
+{
+    std::map<std::string, MeshData *>::const Iterator it = s_resource_map.find(filename);
+    if (it != s_resourceMap.end())
+    {
+        m_mesh_data = it->second;
+        m_mesh_data -> add_reference();
+    }
+    else
+    {
+        Assimp::Importer importer;
+        const aiScene *scene = importer.ReadFile(("./res/models" + filename).c_str(),
+                aiProcess_Triangulate |
+                aiProcess_GenSmoothNormals |
+                aiProcess_FlipUVs |
+                aiProcess_CalcTangentSpace);
+        if (!scene)
+        {
+            std::cout << "Mesh load failed!: " << filename <<std::endl;
+            assert (0 == 0);
+        }
+
+        const aiMesh *model = scene->mMeshes[0];
+
+        std::vector<Vector3f> positions;
+        std::vector<Vector2f> tex_coords;
+        std::vector<Vector3f> normals;
+        std::vector<Vector3f> tangents;
+        std::vector<unsigned> indices;
+
+        const aiVector3D aiZeroVector(0.0f, 0.0f, 0.0f);
+        for (unsigned i=0; i<model->mNumVertices; i++)
+        {
+            const aiVector3D pos = model->mVertices[i];
+            const aiVector3D normal = model-> mNormals[i];
+            const aiVector3D tex_coord = model->HasTextureCoords(0) ? model->mTextureCoords[0][i] : aiZeroVector;
+            const aiVector3D tangent = model->mTangents[i];
+
+            positions.push_back(Vector3f(pos.x, pos.y, pos.z));
+            tex_coords.push_back(Vector3f(tex_coord.x, tex_coord.y, tex_coord.z));
+            normals.push_back(Vector3f(normal.x, normal.y, normal.z));
+            tangents.push_back(Vector3f(tangent.x, tangent.y, tangent.z));
+        }
+
+        for (unsigned i=0; i<model->mNumFaces; i++)
+        {
+            const aiFace &face = model->mFaces[i];
+            assert(face.numIndices == 3);
+            indices.push_back(face.mIndices[0]);
+            indices.push_back(face.mIndices[1]);
+            indices.push_back(face.mIndices[2]);
+        }
+
+        m_mesh_data = new MeshData(IndexedModel(indices, positions, tex_coords, normals, tangents));
+        s_resource_map.insert(std::pair<std::string, MeshData *>(filename, m_mesh_data));
+
+    }
+
+}
+
+Mesh::Mesh(const Mesh &mesh) :
+    m_filename(mesh.m_filename),
+    m_mesh_data(mesh.m_mesh_data)
+{
+  m_mesh_data -> add_reference ();
+}
+
+Mesh::~Mesh()
+{
+    if (m_mesh_data && m_mesh_data -> RemoveReference())
+    {
+        if (m_filename.length() > 0)
+            s_resource_map.erase(m_filename);
+        delete(m_mesh_data);
+    }
+
+}
+
+Mesh::draw() const
+{
+    m_mesh_data -> draw();
+}

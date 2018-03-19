@@ -88,7 +88,7 @@ class MeshData : public ReferenceCounter
         };
 
         GLuint m_vertex_array_object;
-        GLuint m_vertex_array_buffer[NUM_BUFFERS];
+        GLuint m_vertex_array_buffers[NUM_BUFFERS];
         int m_draw_count;
 };
 
